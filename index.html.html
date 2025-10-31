@@ -1,0 +1,187 @@
+ <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Weather App</title>
+            <meta charset="UTF-8">
+            <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body {
+                    font-family: 'Segoe UI', Arial, sans-serif;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    min-height: 100vh;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    padding: 20px;
+                }
+                .container {
+                    background: white;
+                    padding: 40px;
+                    border-radius: 20px;
+                    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+                    max-width: 600px;
+                    width: 100%;
+                }
+                h1 { 
+                    color: #333; 
+                    text-align: center; 
+                    margin-bottom: 10px;
+                    font-size: 2.5rem;
+                }
+                .subtitle {
+                    text-align: center;
+                    color: #666;
+                    margin-bottom: 30px;
+                }
+                input {
+                    width: 100%;
+                    padding: 15px;
+                    border: 2px solid #ddd;
+                    border-radius: 10px;
+                    font-size: 16px;
+                    margin-bottom: 15px;
+                }
+                input:focus {
+                    outline: none;
+                    border-color: #667eea;
+                }
+                button {
+                    width: 100%;
+                    padding: 15px;
+                    background: linear-gradient(135deg, #667eea, #764ba2);
+                    color: white;
+                    border: none;
+                    border-radius: 10px;
+                    font-size: 16px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: transform 0.2s;
+                }
+                button:hover { 
+                    transform: translateY(-2px);
+                    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+                }
+                #result {
+                    margin-top: 30px;
+                    padding: 25px;
+                    background: #f8f9fa;
+                    border-radius: 15px;
+                    display: none;
+                }
+                .weather-header {
+                    font-size: 24px;
+                    font-weight: bold;
+                    color: #333;
+                    margin-bottom: 20px;
+                    text-align: center;
+                }
+                .weather-info { 
+                    margin: 12px 0; 
+                    font-size: 18px;
+                    padding: 10px;
+                    background: white;
+                    border-radius: 8px;
+                }
+                .label {
+                    font-weight: 600;
+                    color: #667eea;
+                }
+                .error { 
+                    color: #dc3545;
+                    background: #ffe5e5;
+                    padding: 15px;
+                    border-radius: 10px;
+                    text-align: center;
+                }
+                .loading {
+                    text-align: center;
+                    color: #667eea;
+                    font-size: 18px;
+                }
+                .tip {
+                    background: #fff3cd;
+                    padding: 15px;
+                    border-radius: 10px;
+                    margin-top: 20px;
+                    border-left: 4px solid #ffc107;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>Weather App</h1>
+                <p class="subtitle">Get real-time weather information</p>
+                
+                <input type="password" id="apiKey" placeholder="Your OpenWeatherMap API Key">
+                <input type="text" id="city" placeholder="Enter city name (e.g., Mumbai, London)">
+                <button onclick="getWeather()">Get Weather</button>
+                
+                <div id="result"></div>
+                
+                <div class="tip">
+                    <strong>Tip:</strong> Get your free API key from 
+                    <a href="https://openweathermap.org/api" target="_blank">OpenWeatherMap</a>
+                    <br><small>Wait 1-2 hours after creating a new key for activation</small>
+                </div>
+            </div>
+            
+            <script>
+                function getWeather() {
+                    const city = document.getElementById('city').value.trim();
+                    const apiKey = document.getElementById('apiKey').value.trim();
+                    const result = document.getElementById('result');
+                    
+                    if (!city || !apiKey) {
+                        result.innerHTML = '<p class="error">Please enter both API key and city name!</p>';
+                        result.style.display = 'block';
+                        return;
+                    }
+                    
+                    result.innerHTML = '<p class="loading">Fetching weather data...</p>';
+                    result.style.display = 'block';
+                    
+                    fetch('/api/weather', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ city: city, api_key: apiKey })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            result.innerHTML = '<p class="error">' + data.error + '</p>';
+                        } else {
+                            result.innerHTML = `
+                                <div class="weather-header">${data.city}, ${data.country}</div>
+                                <div class="weather-info">
+                                    <span class="label">Temperature:</span> ${data.temperature} C
+                                </div>
+                                <div class="weather-info">
+                                    <span class="label">Feels Like:</span> ${data.feels_like} C
+                                </div>
+                                <div class="weather-info">
+                                    <span class="label">Condition:</span> ${data.description}
+                                </div>
+                                <div class="weather-info">
+                                    <span class="label">Humidity:</span> ${data.humidity}%
+                                </div>
+                                <div class="weather-info">
+                                    <span class="label">Wind Speed:</span> ${data.wind_speed} m/s
+                                </div>
+                                <div class="weather-info">
+                                    <span class="label">Pressure:</span> ${data.pressure} hPa
+                                </div>
+                            `;
+                        }
+                    })
+                    .catch(error => {
+                        result.innerHTML = '<p class="error">Network error: ' + error + '</p>';
+                    });
+                }
+                
+                // Allow Enter key to submit
+                document.getElementById('city').addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') getWeather();
+                });
+            </script>
+        </body>
+        </html>
